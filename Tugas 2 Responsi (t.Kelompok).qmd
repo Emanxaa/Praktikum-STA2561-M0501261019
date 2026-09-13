@@ -1,0 +1,410 @@
+---
+title: "Tugas Praktikum Kelompok 7"
+subtitle: "Praktikum 4 — Visualisasi Data"
+author: "<div class='rapat'>Emanuel Marthen Embuai (M0501261019)<br>Raihanindita Jasmine (M0501261033)<br>Yuvani Oksarianti (M0501261008)</div>"
+date: today
+
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    toc-title: "Daftar Isi"
+    include-in-header:
+      - text: |
+          <style>
+          .rapat {
+            line-height: 1.3 !important;
+          }
+          .quarto-title-meta-contents p {
+            margin-bottom: 0 !important;
+          }
+          .quarto-title-meta-contents {
+            margin-bottom: 0 !important;
+          }
+          </style>
+
+    theme: cosmo
+    css: style.css
+
+    smooth-scroll: true
+    page-layout: full
+    self-contained: true
+
+    code-fold: false
+    code-summary: "Tampilkan kode"
+    code-tools: false
+
+    fig-align: center
+    fig-width: 9
+    fig-height: 5.5
+    df-print: paged
+
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+```{r}
+#| include: false
+library(ggplot2)
+library(tidyverse)
+```
+
+## 1. Pembersihan Data Mahasiswa
+
+**1.1 Buat data frame bernama nilai_raw secara manual di R berdasarkan Tabel 1.**
+
+```{r}
+#| echo: True
+nilai_raw <- data.frame(
+  Nama = c("Andi", "Budi", "Citra", "Dewi", "Andi"),
+  Matematika = c(80,90, NA, 75, 80),
+  Statistika = c(85, 88, 78, "-", 85),
+  Umur = c(21, 20, 22, 21, 21),
+  stringsAsFactors = FALSE
+)
+nilai_raw
+```
+
+**1.2 Identifikasi nilai yang hilang pada dataset secara sistematis. Ubah tanda hubung ("-") pada nilai Statistika milik Dewi menjadi nilai hilang standar R, yaitu NA.**
+
+```{r}
+#| echo: True
+sum(is.na(nilai_raw))
+```
+
+```{r}
+#| echo: True
+
+nilai_raw$Statistika[nilai_raw$Nama == "Dewi" & nilai_raw$Statistika == "-"] <- NA
+
+nilai_raw$Statistika <-as.numeric(nilai_raw$Statistika)
+
+nilai_raw
+sum(is.na(nilai_raw))
+
+```
+
+**1.3 Lakukan imputasi terhadap nilai Statistika yang kosong menggunakan rata-rata nilai Statistika mahasiswa lainnya yang tersedia.**
+
+```{r}
+#| echo: True
+nilai_raw$Statistika[is.na(nilai_raw$Statistika)] <- round(mean(nilai_raw$Statistika, na.rm = TRUE), 2)
+
+nilai_raw
+```
+
+**1.4 Buat kolom baru bernama Status_Umur menggunakan fungsi ifelse() dengan ketentuan: Dewasa jika umur ≥ 21 tahun; Muda jika umur \< 21 tahun.**
+
+```{r}
+#| echo: True
+
+nilai_raw$Status_Umur <- ifelse (nilai_raw$Umur >= 21, "Dewasa", "Muda")
+nilai_raw
+```
+
+**1.5 Identifikasi dan hapus baris pengamatan yang duplikat.**
+
+```{r}
+#| echo: True
+#cek baris duplikat
+nilai_raw[duplicated(nilai_raw),]
+
+#hapus baris duplikat
+nilai_bersih <- unique(nilai_raw)
+nilai_bersih
+```
+
+**1.6 Simpan dataset yang telah dibersihkan ke dalam file bernama nilai_bersih.csv.**
+
+```{r}
+#| echo: True
+write.csv(nilai_bersih, file = "nilai_bersih.csv", row.names = FALSE)
+```
+
+## 2. Subsetting dan Pengurutan Multikriteria
+
+**2.1 Buat data frame bernama profil secara manual di R berdasarkan Tabel.**
+
+```{r}
+#| echo: True
+profil <- data.frame(
+  No = 1:10,
+  gender = c("f","f","f","m","m","f","m","m","f","m"),
+  v1 = c(8,15,8,14,8,10,9,9,10,12),
+  v2 = c(9, 8, 13, 9, 2, 6, 9, 10, 13, 10),
+  v3 = c(5, 9, 12, 8, 9, 10, 7, 8, 6, 9),
+  v4 = c(9, 5, 6, NA, 16, 9, 13, 10, 7, 8),
+  v5 = c(9, 10, 7, 11, 8, 10, 9, 5, 10, 17),
+  v6 = c(9, 8, 9, 10, 10, 10, 12, 10, 12, 7),
+  v7 = c(5, 10, 14, 6, 8, 9, 10, 6, 13, 9),
+  v8 = c(9, 12, 12, 11, 9, 7, 9, 12, 9, 10),
+  v9 = c(11, 9, 12, 11, 8, 7, 11, 6, 6, 7),
+  v10 = c(8, 15, 9, 8, 9, 11, 7, 8, 9, 7)
+)
+  
+profil
+```
+
+**2.2 Lakukan penyaringan (subsetting) sehingga hanya menyisakan pengamatan yang memenuhi salah satu kondisi berikut: gender laki-laki (m) dan v1 \> 9 ; atau gender perempuan (f) dan v3 \<= 10.**
+
+```{r}
+#| echo: True
+
+profil_subset <- profil[(profil$gender == "m" & profil$v1 > 9) | (profil$gender == "f" & profil$v3 <= 10), ]
+profil_subset
+
+```
+
+**2.3 Urutkan data hasil penyaringan secara multikriteria, dengan ketentuan: gender diurutkan secara descending; untuk pengamatan dengan gender yang sama, v5 diurutkan secara ascending.**
+
+```{r}
+#| echo: True
+profil_filter<- profil_subset[order(-as.integer(factor(profil_subset$gender)), profil_subset$v5),]
+
+profil_filter
+
+  
+```
+
+**2.4 Simpan hasil akhir ke dalam file bernama profil_filter.csv.**
+
+```{r}
+#| echo: True
+
+write.csv(profil_filter, file = "profil_filter.csv", row.names = FALSE)
+
+```
+
+## 3. Penggabungan dan Reshaping Data
+
+Diberikan dua data frame mengenai skor penjualan mingguan beberapa toko berikut.
+
+```{r}
+#| echo: True
+df_sales <- data.frame(
+  id_toko = c("T1", "T2", "T3"),
+  Minggu1 = c(120, 150, 95),
+  Minggu2 = c(135, 140, 110)
+)
+
+df_info <- data.frame(
+  id = c("T1", "T2", "T4"),
+  Kota = c("Jakarta", "Bandung", "Surabaya")
+)
+
+```
+
+```{r}
+#| echo: True
+df_info
+```
+
+```{r}
+#| echo: True
+df_sales
+```
+
+**3.1 Gabungkan df_sales dan df_info menggunakan fungsi merge() dengan metode Full Outer Join, sehingga seluruh toko dari kedua data frame tetap disertakan. Perhatikan bahwa nama variabel kunci pada kedua data frame berbeda, yaitu id_toko pada df_sales dan id pada df_info. Gunakan argumen penggabungan yang sesuai.**
+
+```{r}
+#| echo: True
+#merge dua data frame
+
+df_merge<-merge(df_sales,df_info,by.x="id_toko",by.y="id")
+df_merge
+```
+
+**3.2 Ubah struktur data hasil penggabungan dari format Wide menjadi Long, sehingga: Minggu1 dan Minggu2 digabung menjadi satu kolom bernama Waktu; nilai penjualan disimpan dalam satu kolom bernama Penjualan.**
+
+```{r}
+#| echo: True
+#mengubah ke data long
+
+df_wide <- df_merge
+
+data_long <- pivot_longer(
+  df_wide,
+  cols = c(Minggu1, Minggu2),
+  names_to = "Waktu",
+  values_to = "Penjualan"
+)
+
+data_long
+```
+
+**3.3 Simpan dataset dalam format Long tersebut ke dalam file bernama penjualan_long.csv.**
+
+```{r}
+#| echo: True
+
+write.csv(profil_filter, file = "penjualan_long.csv", row.names = FALSE)
+```
+
+## 4. Eksplorasi Visual
+
+Gunakan dataset bawaan R CO2 untuk mengeksplorasi hubungan antara konsentrasi karbon dioksida (conc) dan tingkat penyerapan karbon dioksida (uptake) pada tanaman.
+
+**4.1 Kenali struktur dataset CO2 dan identifikasi peran peubah Plant, Type, Treatment, conc, dan uptake, kemudian buat grafik menggunakan base R untuk menunjukkan hubungan conc dan uptake dengan mengatur bentuk dan ukuran titik, warna, judul, label sumbu, serta rentang sumbu, lalu tambahkan minimal dua elemen grafik menggunakan points(), lines(), abline(), atau text().**
+
+```{r}
+#| echo: True
+# Cek data dan bentuk data. 
+
+CO2
+glimpse(CO2)
+names(CO2)
+```
+
+```{r}
+#| echo: True
+# Melakukan penyesuaian data untuk plotting.
+
+Plant <- factor(CO2$Plant, ordered=TRUE)
+Type <- as.factor(CO2$Type)
+Treatment <- as.factor(CO2$Treatment)
+Conc <- CO2$conc
+Uptake <- CO2$uptake
+```
+
+```{r}
+#| echo: True
+#Melakukan Plotting dari Conc vs Uptake
+
+plot(
+  x = Conc,
+  y = Uptake,
+  pch = 1,
+  cex = 1.2,
+  col = "Blue",
+  main = "Conc vs Uptake",
+  xlab = "Conc",
+  ylab = "Uptake"
+)
+abline(h=mean(CO2$uptake),lty=2)
+text(y=30,x=800, "Average of Uptake",col = "Red")
+```
+
+**4.2 Buat satu tampilan grafik berukuran 2 × 2 yang terdiri atas empat jenis visualisasi berbeda untuk mengeksplorasi conc, uptake, Type, dan Treatment; tentukan sendiri jenis grafik yang paling sesuai dan berikan judul yang jelas pada setiap grafik.**
+
+```{r}
+#| echo: True
+# Inisialisasi tempat dari ke 4 grafik atau par. 
+
+par(mfrow = c(2,2))
+
+hist(Uptake, main = "Histogram of Uptake", xlab = "Uptake", col = "Blue")
+
+boxplot(Conc, main = "Box Plot of Conc", xlab = "Conc", col = "Green")
+
+barplot(table(CO2$Type),
+        main = "Barplot of Type",
+        ylab = "Frequency",
+        col="pink")
+
+barplot(table(CO2$Treatment),
+        main = "Barplot of Treatment",
+        ylab = "Frequency",
+        col="lightblue")
+
+```
+
+**4.3 Gunakan qplot() untuk membuat visualisasi cepat hubungan conc dan uptake berdasarkan Treatment, kemudian buat kembali visualisasi tersebut menggunakan ggplot2 dengan memetakan Treatment dan Type ke atribut visual yang berbeda di dalam aes() serta menggunakan geom\_\* yang sesuai.**
+
+```{r}
+#| echo: True
+qplot(
+  x = Conc,
+  y = Uptake,
+  colour = Treatment,
+  data = CO2
+)
+
+ggplot(
+  data = CO2,
+  aes(
+    x = conc,
+    y = uptake,
+    color = Treatment,
+    shape = Type
+  )
+) +
+  geom_point()
+```
+
+**4.4 Kembangkan grafik ggplot2 tersebut dengan menambahkan minimal satu stat\_*, satu scale\_*, serta salah satu coord\_\*, kemudian lengkapi grafik menggunakan labs() dan theme() atau salah satu tema siap pakai agar grafik lebih informatif dan mudah dibaca.**
+
+```{r}
+#| echo: True
+grafik_final <- ggplot(
+  data = CO2,
+  aes(
+    x = conc,
+    y = uptake,
+    color = Treatment,
+    shape = Type
+  )
+) + 
+  geom_point(size=3) +
+  stat_smooth(
+    method = "lm"
+  ) +
+  scale_color_manual(
+    values = c("red","blue")
+  ) + coord_cartesian(
+    xlim = c(94, 1000),
+    ylim = c(7, 46)
+  ) + labs(
+    title = "CO2 Concentration vs Uptake",
+    subtitle = "Comparison by Treatment and Type",
+    x = "CO2 Concentration",
+    y = "CO2 Uptake",
+    color = "Treatment",
+    shape = "Plant Type"
+  ) +
+  theme_classic() +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
+    plot.subtitle = element_text(hjust = 0.5, size = 12)
+  )
+
+grafik_final
+```
+
+**4.5 Simpan grafik akhir menggunakan ggsave() dalam format PNG dengan nama co2_uptake_visualisasi.png, kemudian tuliskan interpretasi mengenai hubungan antara konsentrasi CO₂ dan uptake serta perbedaan pola yang terlihat berdasarkan Type dan Treatment.**
+
+```{r}
+#| echo: True
+ggsave(
+  filename ="co2_uptake_visualisasi.png",
+  plot = grafik_final)
+```
+
+::: callout
+Interpretasi:
+
+Grafik menunjukkan hubungan antara konsentrasi CO₂ (conc) dengan laju penyerapan CO₂ (uptake) pada tanaman berdasarkan tipe tanaman (Type) dan perlakuan (Treatment).
+
+1.  Hubungan antara konsentrasi CO₂ dan uptake
+
+Terdapat hubungan positif antara konsentrasi CO₂ dan nilai uptake. Semakin tinggi konsentrasi CO₂, semakin tinggi pula kemampuan tanaman menyerap CO₂. Hal ini terlihat dari seluruh garis regresi yang memiliki kemiringan positif. Peningkatan ini menunjukkan bahwa kenaikan konsentrasi CO₂ cenderung meningkatkan laju fotosintesis tanaman, meskipun besar peningkatannya berbeda pada setiap kelompok.
+
+2.  Perbedaan berdasarkan Type
+
+Tanaman Quebec (simbol lingkaran) secara umum memiliki nilai uptake yang lebih tinggi dibandingkan tanaman Mississippi (simbol segitiga) pada konsentrasi CO₂ yang sama. Pada konsentrasi CO₂ yang tinggi (sekitar 675–1000 ppm), perbedaan tersebut semakin terlihat karena nilai uptake Quebec meningkat lebih besar dibandingkan Mississippi.
+
+3.  Perbedaan berdasarkan Treatment
+
+Tanaman dengan perlakuan nonchilled (garis merah) memiliki nilai uptake yang lebih tinggi dibandingkan tanaman chilled (garis biru) pada hampir seluruh tingkat konsentrasi CO₂. Hal ini mengindikasikan bahwa perlakuan pendinginan (chilled) menurunkan kemampuan tanaman dalam menyerap CO₂.
+
+4.  Pola kombinasi Type dan Treatment
+
+Quebec + nonchilled menghasilkan nilai uptake tertinggi dengan peningkatan yang paling tajam seiring bertambahnya konsentrasi CO₂. Quebec + chilled masih menunjukkan peningkatan yang cukup besar, tetapi berada di bawah kelompok nonchilled. Mississippi + nonchilled memiliki kemampuan penyerapan sedang. Mississippi + chilled merupakan kelompok dengan uptake terendah dan peningkatannya paling landai.
+
+5.  Interval kepercayaan
+
+Area abu-abu di sekitar garis regresi merupakan interval kepercayaan (confidence interval). Interval ini menunjukkan adanya variasi pada data, namun secara keseluruhan tren peningkatan uptake terhadap kenaikan konsentrasi CO₂ tetap konsisten pada semua kelompok.
+
+**Kesimpulan:** Secara keseluruhan, grafik menunjukkan bahwa peningkatan konsentrasi CO₂ berpengaruh positif terhadap uptake tanaman. Selain itu, tipe tanaman Quebec cenderung memiliki kemampuan penyerapan CO₂ yang lebih tinggi dibandingkan Mississippi, sedangkan perlakuan nonchilled menghasilkan uptake yang lebih baik dibandingkan chilled. Kombinasi Quebec–nonchilled merupakan kelompok dengan performa penyerapan CO₂ terbaik, sedangkan Mississippi–chilled menunjukkan performa terendah.
+:::
