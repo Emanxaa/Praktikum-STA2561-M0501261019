@@ -212,7 +212,7 @@ df_sales
 #| echo: True
 #merge dua data frame
 
-df_merge<-merge(df_sales,df_info,by.x="id_toko",by.y="id")
+df_merge<-merge(df_sales,df_info,by.x="id_toko",by.y="id", all = TRUE)
 df_merge
 ```
 
@@ -239,7 +239,7 @@ data_long
 ```{r}
 #| echo: True
 
-write.csv(profil_filter, file = "penjualan_long.csv", row.names = FALSE)
+write.csv(data_long, file = "penjualan_long.csv", row.names = FALSE)
 ```
 
 ## 4. Eksplorasi Visual
@@ -259,12 +259,21 @@ names(CO2)
 
 ```{r}
 #| echo: True
-# Melakukan penyesuaian data untuk plotting.
+# Menyesuaikan tipe data setiap peubah sebelum digunakan untuk visualisasi.
 
-Plant <- factor(CO2$Plant, ordered=TRUE)
+# Mengubah Plant menjadi ordered factor agar identitas tanaman tersimpan sebagai kategori berurutan.
+Plant <- factor(CO2$Plant, ordered = TRUE)
+
+# Mengubah Type menjadi factor karena merupakan variabel kategorik (Quebec/Mississippi).
 Type <- as.factor(CO2$Type)
+
+# Mengubah Treatment menjadi factor karena merupakan variabel kategorik (chilled/nonchilled).
 Treatment <- as.factor(CO2$Treatment)
+
+# Menyimpan peubah konsentrasi CO2 (variabel numerik untuk sumbu X).
 Conc <- CO2$conc
+
+# Menyimpan peubah laju penyerapan CO2 (variabel numerik untuk sumbu Y).
 Uptake <- CO2$uptake
 ```
 
@@ -277,13 +286,15 @@ plot(
   y = Uptake,
   pch = 1,
   cex = 1.2,
-  col = "Blue",
+  col = "blue",
   main = "Conc vs Uptake",
   xlab = "Conc",
-  ylab = "Uptake"
+  ylab = "Uptake",
+  xlim = c(95, 1000),
+  ylim = c(7, 46)
 )
-abline(h=mean(CO2$uptake),lty=2)
-text(y=30,x=800, "Average of Uptake",col = "Red")
+abline(h = mean(CO2$uptake), lty = 2)
+text(x = 800, y = 30, "Average of Uptake", col = "red")
 ```
 
 **4.2 Buat satu tampilan grafik berukuran 2 × 2 yang terdiri atas empat jenis visualisasi berbeda untuk mengeksplorasi conc, uptake, Type, dan Treatment; tentukan sendiri jenis grafik yang paling sesuai dan berikan judul yang jelas pada setiap grafik.**
